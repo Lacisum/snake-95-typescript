@@ -4,6 +4,7 @@
 export enum CellStatus {
   EMPTY,
   SNAKE_PART,
+  FOOD,
 }
 
 /**

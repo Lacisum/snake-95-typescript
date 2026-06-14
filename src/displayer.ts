@@ -50,6 +50,10 @@ export class Displayer {
             break;
           case CellStatus.SNAKE_PART:
             htmlCell.classList = 'cell snake-part';
+            break;
+          case CellStatus.FOOD:
+            htmlCell.classList = 'cell food';
+            break;
         }
       }
     }

@@ -1,8 +1,10 @@
 :root {
   --grid-container-border: 1px solid black;
-  --cell-sidelength: 2rem;
-  --snake-cell-border-radius: 1rem;
-  --snake-color: black;
+  --snake-cell-sidelength: 2rem;
+  --snake-cell-border-radius: 100%;
+  --snake-cell-color: black;
+  --food-cell-color: lightgreen;
+  --food-cell-sidelength: calc(var(--snake-cell-sidelength) * 0.7);
 }
 
 #app {
@@ -13,14 +15,21 @@
 .grid-container {
   display: grid;
   border: var(--grid-container-border);
+  place-items: center;
 }
 
 .cell {
-  height: var(--cell-sidelength);
-  width: var(--cell-sidelength);
+  height: var(--snake-cell-sidelength);
+  width: var(--snake-cell-sidelength);
+  border-radius: var(--snake-cell-border-radius);
 
   &.snake-part {
-    background-color: var(--snake-color);
-    border-radius: var(--snake-cell-border-radius);
+    background-color: var(--snake-cell-color);
+  }
+
+  &.food {
+    height: var(--food-cell-sidelength);
+    width: var(--food-cell-sidelength);
+    background-color: var(--food-cell-color);
   }
 }

@@ -24,3 +24,15 @@ export function loop(n: number, range: [number, number]): number {
   const [min, max] = range;
   return n - (max - min) * (Math.floor((n - max) / (max - min)) + 1);
 }
+
+/**
+ * Returns a random integer between `min` (inclusive) and `max` (exclusive).
+ *
+ * @param min the minimum value of the number to generate
+ * @param max the maximum value of the number to generate
+ * @returns a random number between `min` and `max`
+ */
+export function randomInt(min: number, max: number) {
+  if (min > max) throw new Error('The minimum is greater than the maximum');
+  return Math.floor(Math.random() * (max - min)) + min;
+}

@@ -42,6 +42,7 @@ export class Game {
       };
     }
     this.#grid = grid;
+    this.#placeFoodOnRandomEmptyCell();
   }
 
   static get COLUMN_RANGE(): [number, number] {
@@ -97,8 +98,13 @@ export class Game {
    * towards and removes the tail.
    */
   #updateSnakePosition(): void {
-    this.#removeSnakeTail();
     const nextHeadPosition = this.#getSnakeNextHeadPosition();
+    if (
+      this.#grid[nextHeadPosition.row][nextHeadPosition.column].status !==
+      CellStatus.FOOD
+    )
+      this.#removeSnakeTail();
+    else this.#placeFoodOnRandomEmptyCell();
     this.#addSnakeHeadAt(nextHeadPosition);
   }
 
@@ -171,6 +177,24 @@ export class Game {
       snakePart: newHead,
     };
     this.#snake.addHead(newHead);
+  }
+
+  /**
+   * Sets a random empty cell in the "food" state.
+   */
+  #placeFoodOnRandomEmptyCell(): void {
+    const emptyPositions: Position[] = [];
+    for (let row = 0; row < this.#grid.length; row++) {
+      for (let column = 0; column < this.#grid[0].length; column++) {
+        if (this.#grid[row][column].status === CellStatus.EMPTY)
+          emptyPositions.push({ row, column });
+      }
+    }
+    const randomEmptyPosition =
+      emptyPositions[Utils.randomInt(0, emptyPositions.length)];
+    this.#grid[randomEmptyPosition.row][randomEmptyPosition.column] = {
+      status: CellStatus.FOOD,
+    };
   }
 
   /**
@@ -260,4 +284,5 @@ class SnakePart {
 
 type Cell =
   | { status: CellStatus.EMPTY }
-  | { status: CellStatus.SNAKE_PART; snakePart: SnakePart };
+  | { status: CellStatus.SNAKE_PART; snakePart: SnakePart }
+  | { status: CellStatus.FOOD };
