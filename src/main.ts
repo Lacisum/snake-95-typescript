@@ -12,25 +12,25 @@ const displayer = new Displayer(Game.GRID_NB_ROWS, Game.GRID_NB_COLUMNS);
 document.addEventListener('keyup', function (event: KeyboardEvent) {
   switch (event.key) {
     case 'ArrowUp':
-      game.pushSnakeDirection(Direction.UP);
+      game.enqueueSnakeDirection(Direction.UP);
       break;
     case 'ArrowDown':
-      game.pushSnakeDirection(Direction.DOWN);
+      game.enqueueSnakeDirection(Direction.DOWN);
       break;
     case 'ArrowRight':
-      game.pushSnakeDirection(Direction.RIGHT);
+      game.enqueueSnakeDirection(Direction.RIGHT);
       break;
     case 'ArrowLeft':
-      game.pushSnakeDirection(Direction.LEFT);
+      game.enqueueSnakeDirection(Direction.LEFT);
       break;
   }
 });
 
 // Start the game
-displayer.draw(game.snakeHeadPosition);
+displayer.draw(game.cellsStatuses);
 await sleep(TICK_DURATION);
 while (true) {
   game.tick();
-  displayer.draw(game.snakeHeadPosition);
+  displayer.draw(game.cellsStatuses);
   await sleep(TICK_DURATION);
 }

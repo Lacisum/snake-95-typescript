@@ -1,37 +1,46 @@
-import { type Position, Direction, OPPOSITE_DIRECTIONS } from './common';
+import {
+  CellStatus,
+  type Position,
+  Direction,
+  OPPOSITE_DIRECTIONS,
+} from './common';
 
 import * as Utils from './utils';
 
 export class Game {
   static readonly GRID_NB_COLUMNS = 20;
   static readonly GRID_NB_ROWS = 15;
+  static readonly SNAKE_INITIAL_LENGTH = 3;
 
-  readonly #snakeHead: SnakeHead;
+  readonly #snake: Snake;
   readonly #snakeDirectionQueue: Direction[];
   readonly #grid: ReadonlyArray<Array<Cell>>;
 
   /**
-   * Initializes the snake, the snake's direction queue and the grid.
+   * Initializes the snake, the snake's direction queue, and the grid.
    */
   constructor() {
-    this.#snakeHead = new SnakeHead();
+    this.#snake = new Snake(this.#initialSnakePartsPositions());
+
     this.#snakeDirectionQueue = [];
 
     // Initialize the grid
     const grid: Cell[][] = [];
     for (let rowNb = 0; rowNb < Game.GRID_NB_ROWS; rowNb++) {
       const row: Cell[] = [];
-      grid.push(row);
       for (let columnNb = 0; columnNb < Game.GRID_NB_COLUMNS; columnNb++) {
-        grid[rowNb].push({
+        row.push({
           status: CellStatus.EMPTY,
         });
       }
+      grid.push(row);
     }
-    grid[this.#snakeHead.position.row][this.#snakeHead.position.column] = {
-      status: CellStatus.SNAKE_HEAD,
-      snakeHead: this.#snakeHead,
-    };
+    for (const snakePart of this.#snake.parts) {
+      grid[snakePart.position.row][snakePart.position.column] = {
+        status: CellStatus.SNAKE_PART,
+        snakePart: snakePart,
+      };
+    }
     this.#grid = grid;
   }
 
@@ -43,127 +52,212 @@ export class Game {
     return [0, this.GRID_NB_ROWS];
   }
 
-  /** Returns the snake's head position. */
-  get snakeHeadPosition() {
-    return this.#snakeHead.position;
+  /** Returns the grid's cells statuses. */
+  get cellsStatuses(): ReadonlyArray<ReadonlyArray<CellStatus>> {
+    return this.#grid.map((row) => row.map((cell) => cell.status));
   }
 
   /**
-   * Moves the snake's head to the provided `newPosition`, replacing its current
-   * position with an empty cell.
+   * If the provided position is not opposite of the next direction of the
+   * snake, enqueues the provided direction in the direction queue.
+   *
+   * If it is opposite of the next direction of the snake, does nothing.
+   *
+   * @param snakeDirection the direction to enqueue
    */
-  set #snakeHeadPosition(newPosition: Position) {
-    const snakeHeadCell =
-      this.#grid[this.#snakeHead.position.row][this.#snakeHead.position.column];
-    if (snakeHeadCell.status !== CellStatus.SNAKE_HEAD) {
-      throw new Error(
-        `Cell at row ${this.#snakeHead.position.row} column ${this.#snakeHead.position.column} should contain the snake's head but it does not`,
-      );
-    }
-    this.#grid[this.#snakeHead.position.row][this.#snakeHead.position.column] =
-      {
-        status: CellStatus.EMPTY,
-      };
-    this.#grid[newPosition.row][newPosition.column] = snakeHeadCell;
-    this.#snakeHead.position = newPosition;
+  enqueueSnakeDirection(snakeDirection: Direction): void {
+    const nextDirection = this.#snakeDirectionQueue.length
+      ? this.#snakeDirectionQueue[0]
+      : this.#snake.direction;
+    if (snakeDirection !== OPPOSITE_DIRECTIONS[nextDirection])
+      this.#snakeDirectionQueue.unshift(snakeDirection);
   }
 
   /**
    * Makes the game tick.
    */
-  tick() {
+  tick(): void {
     this.#updateSnakeDirection();
     this.#updateSnakePosition();
   }
 
   /**
-   * Pushes the provided direction in the direction queue.
+   * If the direction queue is not empty, takes the first direction in it and
+   * makes it the next direction of the snake.
    *
-   * @param snakeDirection the direction to push on the direction queue
+   * If the direction queue is empty, does nothing.
    */
-  pushSnakeDirection(snakeDirection: Direction) {
-    if (
-      (this.#snakeDirectionQueue.length &&
-        snakeDirection !== OPPOSITE_DIRECTIONS[this.#snakeDirectionQueue[0]]) ||
-      snakeDirection !== OPPOSITE_DIRECTIONS[this.#snakeHead.direction]
-    )
-      this.#snakeDirectionQueue.push(snakeDirection);
-  }
-
-  #updateSnakeDirection() {
-    this.#snakeHead.direction =
-      this.#snakeDirectionQueue.shift() ?? this.#snakeHead.direction;
+  #updateSnakeDirection(): void {
+    this.#snake.direction =
+      this.#snakeDirectionQueue.pop() ?? this.#snake.direction;
   }
 
   /**
-   * Moves the snake's head one cell in the direction it is headed to.
+   * Moves the snake, i.e. adds a new head in the direction the snake is headed
+   * towards and removes the tail.
    */
-  #updateSnakePosition() {
-    switch (this.#snakeHead.direction) {
+  #updateSnakePosition(): void {
+    this.#removeSnakeTail();
+    const nextHeadPosition = this.#getSnakeNextHeadPosition();
+    this.#addSnakeHeadAt(nextHeadPosition);
+  }
+
+  /**
+   * Removes the snake's tail.
+   */
+  #removeSnakeTail(): void {
+    this.#grid[this.#snake.tailPosition.row][this.#snake.tailPosition.column] =
+      {
+        status: CellStatus.EMPTY,
+      };
+    this.#snake.removeTail();
+  }
+
+  /**
+   * Returns the snake's next head position, which depends on its direction.
+   *
+   * Opposite sides of the grid are connected.
+   *
+   * @returns the snake's next head position
+   */
+  #getSnakeNextHeadPosition(): Position {
+    let nextHeadPosition: Position;
+    switch (this.#snake.direction) {
       case Direction.RIGHT:
-        this.#snakeHeadPosition = {
-          row: this.#snakeHead.position.row,
-          column: Utils.incrementWithLooping(
-            this.#snakeHead.position.column,
+        nextHeadPosition = {
+          row: this.#snake.headPosition.row,
+          column: Utils.loop(
+            this.#snake.headPosition.column + 1,
             Game.COLUMN_RANGE,
           ),
         };
         break;
       case Direction.LEFT:
-        this.#snakeHeadPosition = {
-          row: this.#snakeHead.position.row,
-          column: Utils.decrementWithLooping(
-            this.#snakeHead.position.column,
+        nextHeadPosition = {
+          row: this.#snake.headPosition.row,
+          column: Utils.loop(
+            this.#snake.headPosition.column - 1,
             Game.COLUMN_RANGE,
           ),
         };
         break;
       case Direction.UP:
-        this.#snakeHeadPosition = {
-          row: Utils.decrementWithLooping(
-            this.#snakeHead.position.row,
-            Game.ROW_RANGE,
-          ),
-          column: this.#snakeHead.position.column,
+        nextHeadPosition = {
+          row: Utils.loop(this.#snake.headPosition.row - 1, Game.ROW_RANGE),
+          column: this.#snake.headPosition.column,
         };
         break;
       case Direction.DOWN:
-        this.#snakeHeadPosition = {
-          row: Utils.incrementWithLooping(
-            this.#snakeHead.position.row,
-            Game.ROW_RANGE,
-          ),
-          column: this.#snakeHead.position.column,
+        nextHeadPosition = {
+          row: Utils.loop(this.#snake.headPosition.row + 1, Game.ROW_RANGE),
+          column: this.#snake.headPosition.column,
         };
         break;
       default:
         throw new Error('SnakeDirection not implemented');
     }
+    return nextHeadPosition;
   }
-}
 
-class SnakeHead {
-  direction: Direction;
-  position: Position;
-
-  constructor() {
-    this.direction = Direction.RIGHT;
-    this.position = {
-      row: Math.floor(Game.GRID_NB_ROWS / 2),
-      column: Math.floor(Game.GRID_NB_COLUMNS / 2),
+  /**
+   * Adds the snake's new head at the provided position.
+   *
+   * @param nextHeadPosition the position where to add the snake's new head
+   */
+  #addSnakeHeadAt(nextHeadPosition: Position): void {
+    const newHead = new SnakePart(nextHeadPosition);
+    this.#grid[nextHeadPosition.row][nextHeadPosition.column] = {
+      status: CellStatus.SNAKE_PART,
+      snakePart: newHead,
     };
+    this.#snake.addHead(newHead);
+  }
+
+  /**
+   * Returns the initial positions of the snake's parts.
+   *
+   * @returns the initial positions of the snake's parts
+   */
+  #initialSnakePartsPositions(): Position[] {
+    const positions: Position[] = [];
+    const row = Math.floor(Game.GRID_NB_ROWS / 2);
+    const column = Math.floor(Game.GRID_NB_COLUMNS / 2);
+    for (let i = 0; i < Game.SNAKE_INITIAL_LENGTH; i++) {
+      positions.push({
+        row: row,
+        column: Utils.loop(column - i, Game.COLUMN_RANGE),
+      });
+    }
+    return positions;
   }
 }
 
-class SnakeBody {}
+class Snake {
+  direction: Direction;
+  readonly parts: SnakePart[];
 
-enum CellStatus {
-  EMPTY,
-  SNAKE_HEAD,
-  SNAKE_BODY,
+  /**
+   * Builds a snake.
+   *
+   * @param positions the initial positions of the snake's parts
+   */
+  constructor(positions: Position[]) {
+    this.direction = Direction.RIGHT;
+    const length = positions.length;
+    if (length < 1) {
+      throw new Error('Cannot build a snake of negative length');
+    }
+    this.parts = [];
+    for (const position of positions) {
+      this.parts.push(new SnakePart(position));
+    }
+  }
+
+  /**
+   * The number of parts of the snake.
+   */
+  get length(): number {
+    return this.parts.length;
+  }
+
+  /**
+   * The head's position.
+   */
+  get headPosition(): Position {
+    return this.parts[0].position;
+  }
+
+  /**
+   * The tail's position.
+   */
+  get tailPosition(): Position {
+    return this.parts[this.length - 1].position;
+  }
+
+  /**
+   * Adds a new head to the snake.
+   *
+   * @param head the new head to add
+   */
+  addHead(head: SnakePart): void {
+    this.parts.unshift(head);
+  }
+
+  /**
+   * Removes the snake's last part.
+   */
+  removeTail(): void {
+    this.parts.pop();
+  }
+}
+
+class SnakePart {
+  position: Position;
+  constructor(position: Position) {
+    this.position = position;
+  }
 }
 
 type Cell =
   | { status: CellStatus.EMPTY }
-  | { status: CellStatus.SNAKE_HEAD; snakeHead: SnakeHead }
-  | { status: CellStatus.SNAKE_BODY; snakeBody: SnakeBody };
+  | { status: CellStatus.SNAKE_PART; snakePart: SnakePart };

@@ -1,4 +1,12 @@
 /**
+ * Represents the content of a cell.
+ */
+export enum CellStatus {
+  EMPTY,
+  SNAKE_PART,
+}
+
+/**
  * Represents a position on the grid.
  */
 export interface Position {

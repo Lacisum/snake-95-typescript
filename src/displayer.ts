@@ -1,4 +1,4 @@
-import { type Position } from './common';
+import { CellStatus } from './common';
 
 /**
  * An object that handles the display.
@@ -37,19 +37,22 @@ export class Displayer {
   /**
    * Does a draw call.
    *
-   * @param snakeHeadPosition the snake's head position
+   * @param cellsStatuses the grid's cells statuses
    */
-  draw(snakeHeadPosition: Position) {
-    // Reset cells
-    for (const row of this.#htmlGrid) {
-      for (const cell of row) {
-        cell.classList = 'cell';
+  draw(cellsStatuses: ReadonlyArray<ReadonlyArray<CellStatus>>): void {
+    for (let i = 0; i < cellsStatuses.length; i++) {
+      for (let j = 0; j < cellsStatuses[0].length; j++) {
+        const cellStatus = cellsStatuses[i][j];
+        const htmlCell = this.#htmlGrid[i][j];
+        switch (cellStatus) {
+          case CellStatus.EMPTY:
+            htmlCell.classList = 'cell';
+            break;
+          case CellStatus.SNAKE_PART:
+            htmlCell.classList = 'cell snake-part';
+        }
       }
     }
-    // Draw snake's head cell
-    const snakeHeadCell =
-      this.#htmlGrid[snakeHeadPosition.row][snakeHeadPosition.column];
-    snakeHeadCell.classList.add('snake-head');
   }
 
   /**
@@ -57,7 +60,7 @@ export class Displayer {
    *
    * @returns an HTML element cell
    */
-  static #createCell() {
+  static #createCell(): HTMLDivElement {
     const cell = document.createElement('div');
     cell.classList.add('cell');
     return cell;

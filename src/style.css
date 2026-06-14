@@ -19,7 +19,7 @@
   height: var(--cell-sidelength);
   width: var(--cell-sidelength);
 
-  &.snake-head {
+  &.snake-part {
     background-color: var(--snake-color);
     border-radius: var(--snake-cell-border-radius);
   }
