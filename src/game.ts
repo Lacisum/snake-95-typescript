@@ -13,6 +13,7 @@ export class Game {
   static readonly SNAKE_INITIAL_LENGTH = 3;
 
   #isOver: boolean;
+  #score: number;
   readonly #snake: Snake;
   readonly #snakeDirectionQueue: Direction[];
   readonly #grid: ReadonlyArray<Array<Cell>>;
@@ -30,6 +31,8 @@ export class Game {
    */
   constructor() {
     this.#isOver = false;
+
+    this.#score = 0;
 
     this.#snake = new Snake(this.#initialSnakePartsPositions());
 
@@ -58,6 +61,10 @@ export class Game {
 
   get isOver() {
     return this.#isOver;
+  }
+
+  get score() {
+    return this.#score;
   }
 
   /** Returns the grid's cells statuses. */
@@ -114,11 +121,14 @@ export class Game {
       return;
     }
     if (
-      this.#grid[nextHeadPosition.row][nextHeadPosition.column].status !==
+      this.#grid[nextHeadPosition.row][nextHeadPosition.column].status ===
       CellStatus.FOOD
-    )
+    ) {
+      this.#score++;
+      this.#placeFoodOnRandomEmptyCell();
+    } else {
       this.#removeSnakeTail();
-    else this.#placeFoodOnRandomEmptyCell();
+    }
     this.#addSnakeHeadAt(nextHeadPosition);
   }
 

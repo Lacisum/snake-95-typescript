@@ -15,6 +15,25 @@
   justify-content: center;
 }
 
+.info-bar {
+  display: flex;
+  flex-direction: row;
+  line-height: 1em;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  font-size: 3rem;
+  border: 1px solid black;
+  border-bottom: none;
+
+  .score-container {
+    display: flex;
+    flex-direction: row;
+    gap: 1rem;
+    align-items: center;
+    height: 1em;
+  }
+}
+
 .grid-container {
   display: grid;
   border: var(--grid-container-border);
@@ -26,20 +45,20 @@
   height: var(--snake-cell-sidelength);
   width: var(--snake-cell-sidelength);
   border-radius: var(--snake-cell-border-radius);
+}
 
-  &.snake-part {
-    background-color: var(--snake-cell-color);
+.snake-part {
+  background-color: var(--snake-cell-color);
 
-    &.dead {
-      background-color: var(--dead-snake-cell-color);
-    }
+  &.dead {
+    background-color: var(--dead-snake-cell-color);
   }
+}
 
-  &.food {
-    height: var(--food-cell-sidelength);
-    width: var(--food-cell-sidelength);
-    background-color: var(--food-cell-color);
-  }
+.food {
+  height: var(--food-cell-sidelength);
+  width: var(--food-cell-sidelength);
+  background-color: var(--food-cell-color);
 }
 
 .popup {

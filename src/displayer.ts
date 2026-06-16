@@ -4,35 +4,36 @@ import { CellStatus } from './common';
  * An object that handles the display.
  */
 export class Displayer {
+  readonly #score: HTMLElement;
+  readonly #gridContainer: HTMLElement;
   /** A bidimensional array containg all HTML elements cells */
-  readonly #htmlGrid: ReadonlyArray<ReadonlyArray<HTMLDivElement>>;
-  readonly #gridContainer: HTMLDivElement;
+  readonly #grid: ReadonlyArray<ReadonlyArray<HTMLElement>>;
 
   /**
    * Initializes the DOM grid
    */
   constructor(gridNbRows: number, gridNbColumns: number) {
-    const htmlGrid = [];
+    const grid = [];
     for (let rowNb = 0; rowNb < gridNbRows; rowNb++) {
-      const row: HTMLDivElement[] = [];
+      const row: HTMLElement[] = [];
       for (let columnNb = 0; columnNb < gridNbColumns; columnNb++) {
         row.push(Displayer.#createCell());
       }
-      htmlGrid.push(row);
+      grid.push(row);
     }
-    this.#htmlGrid = htmlGrid;
+    this.#grid = grid;
 
-    const app = document.querySelector<HTMLDivElement>('#app')!;
-    this.#gridContainer = document.createElement('div');
-    this.#gridContainer.classList.add('grid-container');
+    this.#gridContainer =
+      document.querySelector<HTMLElement>('.grid-container')!;
     this.#gridContainer.style.gridTemplateRows = `repeat(${gridNbRows}, 1fr)`;
     this.#gridContainer.style.gridTemplateColumns = `repeat(${gridNbColumns}, 1fr)`;
-    app.appendChild(this.#gridContainer);
-    for (const row of this.#htmlGrid) {
+    for (const row of this.#grid) {
       for (const cell of row) {
         this.#gridContainer.appendChild(cell);
       }
     }
+
+    this.#score = document.querySelector<HTMLElement>('.score')!;
   }
 
   /**
@@ -89,15 +90,18 @@ export class Displayer {
    * Does a draw call.
    *
    * @param cellsStatuses the grid's cells statuses
+   * @param gameIsOver whether the game is lost
+   * @param score the current score
    */
   draw(
     cellsStatuses: ReadonlyArray<ReadonlyArray<CellStatus>>,
     gameIsOver: boolean,
+    score: number,
   ): void {
     for (let i = 0; i < cellsStatuses.length; i++) {
       for (let j = 0; j < cellsStatuses[0].length; j++) {
         const cellStatus = cellsStatuses[i][j];
-        const htmlCell = this.#htmlGrid[i][j];
+        const htmlCell = this.#grid[i][j];
         switch (cellStatus) {
           case CellStatus.EMPTY:
             htmlCell.classList = 'cell';
@@ -111,6 +115,7 @@ export class Displayer {
         }
       }
     }
+    this.#score.innerHTML = String(score);
   }
 
   /**
@@ -118,7 +123,7 @@ export class Displayer {
    *
    * @returns an HTML element cell
    */
-  static #createCell(): HTMLDivElement {
+  static #createCell(): HTMLElement {
     const cell = document.createElement('div');
     cell.classList.add('cell');
     return cell;
