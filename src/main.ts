@@ -12,7 +12,8 @@ displayer.askPlay(() => play(displayer));
 
 async function play(displayer: Displayer): Promise<void> {
   const game = new Game();
-  document.addEventListener('keyup', function (event: KeyboardEvent) {
+  document.addEventListener('keydown', function (event: KeyboardEvent) {
+    if (event.repeat) return;
     switch (event.key) {
       case 'ArrowUp':
         game.enqueueSnakeDirection(Direction.UP);
