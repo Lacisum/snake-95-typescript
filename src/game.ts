@@ -12,14 +12,25 @@ export class Game {
   static readonly GRID_NB_ROWS = 15;
   static readonly SNAKE_INITIAL_LENGTH = 3;
 
+  #isOver: boolean;
   readonly #snake: Snake;
   readonly #snakeDirectionQueue: Direction[];
   readonly #grid: ReadonlyArray<Array<Cell>>;
+
+  static get COLUMN_RANGE(): [number, number] {
+    return [0, this.GRID_NB_COLUMNS];
+  }
+
+  static get ROW_RANGE(): [number, number] {
+    return [0, this.GRID_NB_ROWS];
+  }
 
   /**
    * Initializes the snake, the snake's direction queue, and the grid.
    */
   constructor() {
+    this.#isOver = false;
+
     this.#snake = new Snake(this.#initialSnakePartsPositions());
 
     this.#snakeDirectionQueue = [];
@@ -45,12 +56,8 @@ export class Game {
     this.#placeFoodOnRandomEmptyCell();
   }
 
-  static get COLUMN_RANGE(): [number, number] {
-    return [0, this.GRID_NB_COLUMNS];
-  }
-
-  static get ROW_RANGE(): [number, number] {
-    return [0, this.GRID_NB_ROWS];
+  get isOver() {
+    return this.#isOver;
   }
 
   /** Returns the grid's cells statuses. */
@@ -99,6 +106,13 @@ export class Game {
    */
   #updateSnakePosition(): void {
     const nextHeadPosition = this.#getSnakeNextHeadPosition();
+    if (
+      this.#grid[nextHeadPosition.row][nextHeadPosition.column].status ===
+      CellStatus.SNAKE_PART
+    ) {
+      this.#isOver = true;
+      return;
+    }
     if (
       this.#grid[nextHeadPosition.row][nextHeadPosition.column].status !==
       CellStatus.FOOD

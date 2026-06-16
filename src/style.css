@@ -3,6 +3,7 @@
   --snake-cell-sidelength: 2rem;
   --snake-cell-border-radius: 100%;
   --snake-cell-color: black;
+  --dead-snake-cell-color: red;
   --food-cell-color: lightgreen;
   --food-cell-sidelength: calc(var(--snake-cell-sidelength) * 0.7);
 }
@@ -16,6 +17,7 @@
   display: grid;
   border: var(--grid-container-border);
   place-items: center;
+  position: relative;
 }
 
 .cell {
@@ -25,11 +27,36 @@
 
   &.snake-part {
     background-color: var(--snake-cell-color);
+
+    &.dead {
+      background-color: var(--dead-snake-cell-color);
+    }
   }
 
   &.food {
     height: var(--food-cell-sidelength);
     width: var(--food-cell-sidelength);
     background-color: var(--food-cell-color);
+  }
+}
+
+.popup {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  text-align: center;
+
+  .play-button {
+    font-size: 2rem;
+    width: 15rem;
+    height: 5rem;
+  }
+
+  .game-over {
+    font-size: 2.5rem;
   }
 }
