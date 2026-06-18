@@ -2,12 +2,18 @@
 
 :root {
   --grid-container-border: 1px solid black;
-  --snake-cell-sidelength: 2rem;
-  --snake-cell-border-radius: 100%;
-  --snake-cell-color: black;
-  --dead-snake-cell-color: red;
-  --food-cell-color: lightgreen;
-  --food-cell-sidelength: calc(var(--snake-cell-sidelength) * 0.7);
+  --cell-sidelength: 2rem;
+  --snake-width-to-cell-ratio: 0.6;
+  --snake-part-width: calc(
+    var(--cell-sidelength) * var(--snake-width-to-cell-ratio)
+  );
+  --snake-part-height: calc(
+    var(--cell-sidelength) / 2 + var(--snake-part-width) / 2
+  );
+  --snake-color: black;
+  --dead-snake-color: red;
+  --food-sidelength: calc(var(--cell-sidelength) * 0.6);
+  --food-color: lightgreen;
 }
 
 #app {
@@ -21,9 +27,11 @@
   display: flex;
   flex-direction: row;
   line-height: 1em;
-  padding-left: 1rem;
-  padding-right: 1rem;
-  font-size: 3rem;
+  font-size: 2.5rem;
+  padding-left: 0.5em;
+  padding-right: 0.5em;
+  padding-top: 0.2em;
+  padding-bottom: 0.2em;
   border: 1px solid black;
   border-bottom: none;
 
@@ -44,23 +52,66 @@
 }
 
 .cell {
-  height: var(--snake-cell-sidelength);
-  width: var(--snake-cell-sidelength);
-  border-radius: var(--snake-cell-border-radius);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: var(--cell-sidelength);
+  width: var(--cell-sidelength);
 }
 
 .snake-part {
-  background-color: var(--snake-cell-color);
+  height: 100%;
+  width: 100%;
+  position: relative;
+  color: var(--snake-color);
 
   &.dead {
-    background-color: var(--dead-snake-cell-color);
+    color: var(--dead-snake-color);
+  }
+
+  > * {
+    display: block;
+    position: absolute;
+    background-color: currentColor;
+  }
+
+  > .right {
+    width: var(--snake-part-height);
+    height: var(--snake-part-width);
+    right: 0;
+    top: 50%;
+    translate: 0 -50%;
+  }
+
+  > .left {
+    width: var(--snake-part-height);
+    height: var(--snake-part-width);
+    left: 0;
+    top: 50%;
+    translate: 0 -50%;
+  }
+
+  > .up {
+    width: var(--snake-part-width);
+    height: var(--snake-part-height);
+    top: 0;
+    left: 50%;
+    translate: -50% 0;
+  }
+
+  > .down {
+    width: var(--snake-part-width);
+    height: var(--snake-part-height);
+    bottom: 0;
+    left: 50%;
+    translate: -50% 0;
   }
 }
 
 .food {
-  height: var(--food-cell-sidelength);
-  width: var(--food-cell-sidelength);
-  background-color: var(--food-cell-color);
+  height: var(--food-sidelength);
+  width: var(--food-sidelength);
+  background-color: var(--food-color);
 }
 
 .popup {

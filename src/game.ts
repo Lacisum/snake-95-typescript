@@ -1,8 +1,10 @@
 import {
+  type Cell,
   CellStatus,
   type Position,
   Direction,
   OPPOSITE_DIRECTIONS,
+  SnakePartType,
 } from './common';
 
 import * as Utils from './utils';
@@ -49,12 +51,35 @@ export class Game {
       }
       grid.push(row);
     }
-    for (const snakePart of this.#snake.parts) {
+    this.#snake.parts.forEach((snakePart, index) => {
       grid[snakePart.position.row][snakePart.position.column] = {
         status: CellStatus.SNAKE_PART,
-        snakePart: snakePart,
+        snakePlacement: (() => {
+          if (index === 0)
+            return {
+              type: SnakePartType.HEAD,
+              directions: {
+                from: Direction.LEFT,
+              },
+            };
+          else if (index === this.#snake.parts.length - 1)
+            return {
+              type: SnakePartType.TAIL,
+              directions: {
+                to: Direction.RIGHT,
+              },
+            };
+          else
+            return {
+              type: SnakePartType.THORAX,
+              directions: {
+                from: Direction.LEFT,
+                to: Direction.RIGHT,
+              },
+            };
+        })(),
       };
-    }
+    });
     this.#grid = grid;
     this.#placeFoodOnRandomEmptyCell();
   }
@@ -67,9 +92,9 @@ export class Game {
     return this.#score;
   }
 
-  /** Returns the grid's cells statuses. */
-  get cellsStatuses(): ReadonlyArray<ReadonlyArray<CellStatus>> {
-    return this.#grid.map((row) => row.map((cell) => cell.status));
+  /** Returns the grid's cells. */
+  get cells(): ReadonlyArray<ReadonlyArray<Cell>> {
+    return this.#grid;
   }
 
   /**
@@ -141,6 +166,27 @@ export class Game {
         status: CellStatus.EMPTY,
       };
     this.#snake.removeTail();
+
+    this.#updateNewTailPlacement();
+  }
+
+  /**
+   * Updates the placement of the new tail (formerly a part of the thorax).
+   */
+  #updateNewTailPlacement() {
+    const { row: tailRow, column: tailColumn } = this.#snake.tailPosition;
+    const newTailCell = this.#grid[tailRow][tailColumn];
+    if (newTailCell.status !== CellStatus.SNAKE_PART)
+      throw new Error('Cell should be a snake part');
+    if (newTailCell.snakePlacement.type !== SnakePartType.THORAX)
+      throw new Error('Cell should be a thorax');
+    const tailTo = newTailCell.snakePlacement.directions.to;
+    newTailCell.snakePlacement = {
+      type: SnakePartType.TAIL,
+      directions: {
+        to: tailTo,
+      },
+    };
   }
 
   /**
@@ -190,15 +236,42 @@ export class Game {
   }
 
   /**
+   * Updates the placement of the former head (now a part of the thorax).
+   */
+  #updateOldHeadPlacement(): void {
+    const { row: headRow, column: headColumn } = this.#snake.headPosition;
+    const headCell = this.#grid[headRow][headColumn];
+    if (headCell.status !== CellStatus.SNAKE_PART)
+      throw new Error('Cell should be a snake part');
+    if (headCell.snakePlacement.type !== SnakePartType.HEAD)
+      throw new Error('Cell should be a head');
+    const headFrom = headCell.snakePlacement.directions.from;
+    headCell.snakePlacement = {
+      type: SnakePartType.THORAX,
+      directions: {
+        from: headFrom,
+        to: this.#snake.direction,
+      },
+    };
+  }
+
+  /**
    * Adds the snake's new head at the provided position.
    *
    * @param nextHeadPosition the position where to add the snake's new head
    */
   #addSnakeHeadAt(nextHeadPosition: Position): void {
+    this.#updateOldHeadPlacement();
+
     const newHead = new SnakePart(nextHeadPosition);
     this.#grid[nextHeadPosition.row][nextHeadPosition.column] = {
       status: CellStatus.SNAKE_PART,
-      snakePart: newHead,
+      snakePlacement: {
+        type: SnakePartType.HEAD,
+        directions: {
+          from: OPPOSITE_DIRECTIONS[this.#snake.direction],
+        },
+      },
     };
     this.#snake.addHead(newHead);
   }
@@ -242,6 +315,11 @@ export class Game {
 
 class Snake {
   direction: Direction;
+  /**
+   * The differents parts of the snake.
+   *
+   * The first item is the head, the last is the tail.
+   */
   readonly parts: SnakePart[];
 
   /**
@@ -301,12 +379,8 @@ class Snake {
 
 class SnakePart {
   position: Position;
+
   constructor(position: Position) {
     this.position = position;
   }
 }
-
-type Cell =
-  | { status: CellStatus.EMPTY }
-  | { status: CellStatus.SNAKE_PART; snakePart: SnakePart }
-  | { status: CellStatus.FOOD };

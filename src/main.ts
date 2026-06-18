@@ -31,11 +31,11 @@ async function play(displayer: Displayer): Promise<void> {
   });
 
   // Start the game
-  displayer.draw(game.cellsStatuses, game.isOver, game.score);
+  displayer.draw(game.cells, game.isOver, game.score);
   while (!game.isOver) {
     await sleep(TICK_DURATION);
     game.tick();
-    displayer.draw(game.cellsStatuses, game.isOver, game.score);
+    displayer.draw(game.cells, game.isOver, game.score);
   }
 
   displayer.askRetry(() => play(displayer));

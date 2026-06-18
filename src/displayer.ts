@@ -1,4 +1,4 @@
-import { CellStatus } from './common';
+import { type Cell, CellStatus } from './common';
 
 /**
  * An object that handles the display.
@@ -89,28 +89,37 @@ export class Displayer {
   /**
    * Does a draw call.
    *
-   * @param cellsStatuses the grid's cells statuses
+   * @param cells the grid's cells statuses
    * @param gameIsOver whether the game is lost
    * @param score the current score
    */
   draw(
-    cellsStatuses: ReadonlyArray<ReadonlyArray<CellStatus>>,
+    cells: ReadonlyArray<ReadonlyArray<Cell>>,
     gameIsOver: boolean,
     score: number,
   ): void {
-    for (let i = 0; i < cellsStatuses.length; i++) {
-      for (let j = 0; j < cellsStatuses[0].length; j++) {
-        const cellStatus = cellsStatuses[i][j];
+    for (let i = 0; i < cells.length; i++) {
+      for (let j = 0; j < cells[0].length; j++) {
+        const cell = cells[i][j];
         const htmlCell = this.#grid[i][j];
-        switch (cellStatus) {
-          case CellStatus.EMPTY:
-            htmlCell.classList = 'cell';
+        htmlCell.innerHTML = ``;
+        htmlCell.classList = 'cell';
+        switch (cell.status) {
+          case CellStatus.SNAKE_PART: {
+            const snakePart = document.createElement('div');
+            snakePart.classList = `snake-part ${gameIsOver ? 'dead' : ''}`;
+            Object.values(cell.snakePlacement.directions).forEach(
+              (direction) => {
+                const segment = document.createElement('div');
+                segment.classList = direction;
+                snakePart.appendChild(segment);
+              },
+            );
+            htmlCell.appendChild(snakePart);
             break;
-          case CellStatus.SNAKE_PART:
-            htmlCell.classList = `cell snake-part ${gameIsOver ? 'dead' : ''}`;
-            break;
+          }
           case CellStatus.FOOD:
-            htmlCell.classList = 'cell food';
+            htmlCell.innerHTML = '<div class="food"></div>';
             break;
         }
       }
