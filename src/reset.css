@@ -22,7 +22,6 @@
 }
 
 body {
-  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -50,6 +49,7 @@ h4,
 h5,
 h6 {
   overflow-wrap: break-word;
+  font-size: 1em;
 }
 
 p {

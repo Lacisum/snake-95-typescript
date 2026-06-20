@@ -9,12 +9,26 @@
   </head>
   <body>
     <div id="app">
-      <div class="canvas">
+      <div class="window">
+        <div class="topbar">
+          <h1>Snake</h1>
+          <div class="window-buttons">
+            <div class="window-button minimize-button"><div>🗕</div></div>
+            <div class="window-button maximize-button"><div>🗖</div></div>
+            <div class="window-button close-button">
+              <!-- I didn't find a satisfying xmark character so I simulated one -->
+              <div style="transform: translate(-7%) rotate(45deg) scale(1.5)">
+                <div>🞤</div>
+              </div>
+            </div>
+          </div>
+        </div>
         <aside class="info-bar">
           <div class="score-container">
             <div class="food"></div>
             <div class="score">0</div>
           </div>
+          <div class="instructions">Use 🠈, 🠉, 🠊 & 🠋 to move</div>
         </aside>
         <main class="grid-container"></main>
       </div>
