@@ -4,7 +4,7 @@ A vanilla TypeScript game
 
 ![Screenshot of the game](images/screenshot.png)
 
-## Prerequesites
+## Prerequisites
 
 To build and run the project, first install:
 - NodeJS
