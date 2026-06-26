@@ -1,6 +1,6 @@
-# Snake
+# Snake 95
 
-A vanilla TypeScript game
+Snake in the style of Windows 95
 
 ![Screenshot of the game](images/screenshot.png)
 
